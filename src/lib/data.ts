@@ -1,4 +1,5 @@
-import type { Employee, AbsenceRequest, JobPosting, Application } from './types';
+
+import type { Employee, AbsenceRequest, JobPosting, Application, Message, Conversation } from './types';
 
 export const EMPLOYEES: Employee[] = [
   { id: '1', name: 'Alice Johnson', email: 'alice@talentflow.com', avatar: 'https://picsum.photos/id/237/200/200', role: 'Frontend Developer', team: 'Web' },
@@ -35,4 +36,18 @@ export const APPLICATIONS: Application[] = [
     { id: 'app2', jobId: 'job1', candidateName: 'Noel Gallagher', candidateEmail: 'noel.g@example.com', cvUrl: '#', status: 'Under Review', appliedAt: new Date('2024-07-21') },
     { id: 'app3', jobId: 'job2', candidateName: 'Damon Albarn', candidateEmail: 'damon.a@example.com', cvUrl: '#', status: 'Received', appliedAt: new Date('2024-07-18') },
     { id: 'app4', jobId: 'job3', candidateName: 'Graham Coxon', candidateEmail: 'graham.c@example.com', cvUrl: '#', status: 'Hired', appliedAt: new Date('2024-06-01') },
+];
+
+// Mock data for Messages and Conversations
+export const MESSAGES: Message[] = [
+    { id: 'msg1', conversationId: 'conv1', senderId: '6', content: 'Hey Jane, do you have a minute to chat?', timestamp: new Date(new Date().getTime() - 1000 * 60 * 5) },
+    { id: 'msg2', conversationId: 'conv1', senderId: '10', content: 'Sure Fiona, what\'s up?', timestamp: new Date(new Date().getTime() - 1000 * 60 * 4) },
+    { id: 'msg3', conversationId: 'conv1', senderId: '6', content: 'I wanted to ask about the new project timeline.', timestamp: new Date(new Date().getTime() - 1000 * 60 * 3) },
+    { id: 'msg4', conversationId: 'conv2', senderId: '1', content: 'Hey Bob, did you see the latest API docs?', timestamp: new Date(new Date().getTime() - 1000 * 60 * 60 * 2) },
+    { id: 'msg5', conversationId: 'conv2', senderId: '2', content: 'Not yet, I\'ll check them out now.', timestamp: new Date(new Date().getTime() - 1000 * 60 * 60 * 1) },
+];
+
+export const CONVERSATIONS: Conversation[] = [
+    { id: 'conv1', participantIds: ['6', '10'], lastMessage: MESSAGES[2] },
+    { id: 'conv2', participantIds: ['1', '2'], lastMessage: MESSAGES[4] },
 ];

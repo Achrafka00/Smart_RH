@@ -9,6 +9,7 @@ import {
   BrainCircuit,
   BarChart3,
   Briefcase,
+  MessageSquare,
 } from "lucide-react";
 import {
   SidebarMenu,
@@ -35,6 +36,12 @@ const navItems = [
     href: "/absences",
     icon: Calendar,
     label: "Absences",
+    roles: ["Employee", "HR"],
+  },
+  {
+    href: "/messages",
+    icon: MessageSquare,
+    label: "Messages",
     roles: ["Employee", "HR"],
   },
   { href: "/insights", icon: BrainCircuit, label: "AI Insights", roles: ["HR"] },

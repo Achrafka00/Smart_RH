@@ -26,6 +26,8 @@ const getPageTitle = (pathname: string) => {
       return "Employee Directory";
     case "/absences":
       return "Absence Management";
+    case "/messages":
+      return "Messages";
     case "/insights":
       return "AI Insights";
     case "/reports":

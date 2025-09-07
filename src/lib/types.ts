@@ -1,3 +1,4 @@
+
 export type UserRole = "Employee" | "HR";
 
 export type Employee = {
@@ -34,4 +35,18 @@ export type Application = {
   cvUrl: string;
   status: "Received" | "Under Review" | "Rejected" | "Hired";
   appliedAt: Date;
+};
+
+export type Message = {
+    id: string;
+    conversationId: string;
+    senderId: string;
+    content: string;
+    timestamp: Date;
+};
+
+export type Conversation = {
+    id: string;
+    participantIds: string[];
+    lastMessage: Message;
 };
