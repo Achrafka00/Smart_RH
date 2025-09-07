@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { PageHeader } from "@/components/page-header";
 import { RoleGate } from "@/components/role-gate";
 import {
@@ -14,9 +15,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { ABSENCE_REQUESTS, EMPLOYEES } from "@/lib/data";
-import type { AbsenceRequest } from "@/lib/types";
+import type { AbsenceRequest, Employee } from "@/lib/types";
 import { format } from "date-fns";
+import { getEmployees } from "@/lib/services/employee.service";
+import { getAbsenceRequests } from "@/lib/services/absence.service";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const getBadgeVariant = (status: AbsenceRequest["status"]) => {
   switch (status) {
@@ -30,16 +33,32 @@ const getBadgeVariant = (status: AbsenceRequest["status"]) => {
 };
 
 export default function ReportsPage() {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [absenceRequests, setAbsenceRequests] = useState<AbsenceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const [emps, reqs] = await Promise.all([getEmployees(), getAbsenceRequests()]);
+      setEmployees(emps);
+      setAbsenceRequests(reqs);
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
+
+
   const data = useMemo(() => {
-    return ABSENCE_REQUESTS.map((req) => {
-      const employee = EMPLOYEES.find((emp) => emp.id === req.employeeId);
+    return absenceRequests.map((req) => {
+      const employee = employees.find((emp) => emp.id === req.employeeId);
       return {
         ...req,
         employeeName: employee?.name || "N/A",
         employeeEmail: employee?.email || "N/A",
       };
-    }).sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
-  }, []);
+    }).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+  }, [absenceRequests, employees]);
 
   const handleExport = () => {
     const csvRows = [
@@ -59,8 +78,8 @@ export default function ReportsPage() {
       const values = [
         `"${row.employeeName}"`,
         `"${row.employeeEmail}"`,
-        `"${format(row.startDate, "yyyy-MM-dd")}"`,
-        `"${format(row.endDate, "yyyy-MM-dd")}"`,
+        `"${format(new Date(row.startDate), "yyyy-MM-dd")}"`,
+        `"${format(new Date(row.endDate), "yyyy-MM-dd")}"`,
         `"${row.reason.replace(/"/g, '""')}"`,
         `"${row.status}"`,
       ].join(",");
@@ -87,7 +106,7 @@ export default function ReportsPage() {
             title="Absence Reports"
             description="View and export all employee absence records."
           />
-          <Button onClick={handleExport}>
+          <Button onClick={handleExport} disabled={loading || data.length === 0}>
             <Download className="mr-2 h-4 w-4" />
             Export to CSV
           </Button>
@@ -103,7 +122,21 @@ export default function ReportsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((req) => (
+              {loading ? (
+                Array.from({length: 5}).map((_, i) => (
+                    <TableRow key={i}>
+                        <TableCell>
+                            <div className="space-y-1">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-3 w-32" />
+                            </div>
+                        </TableCell>
+                        <TableCell><Skeleton className="h-4 w-36" /></TableCell>
+                        <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-48" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                    </TableRow>
+                ))
+              ): data.map((req) => (
                 <TableRow key={req.id}>
                   <TableCell>
                     <div className="font-medium">{req.employeeName}</div>
@@ -111,8 +144,8 @@ export default function ReportsPage() {
                       {req.employeeEmail}
                     </div>
                   </TableCell>
-                  <TableCell>{`${format(req.startDate, "MMM d")} - ${format(
-                    req.endDate,
+                  <TableCell>{`${format(new Date(req.startDate), "MMM d")} - ${format(
+                    new Date(req.endDate),
                     "MMM d, yyyy"
                   )}`}</TableCell>
                   <TableCell className="hidden md:table-cell">{req.reason}</TableCell>

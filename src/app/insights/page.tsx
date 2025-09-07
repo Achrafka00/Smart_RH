@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PageHeader } from "@/components/page-header";
 import { RoleGate } from "@/components/role-gate";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { summarizeAbsenceData } from "@/ai/flows/summarize-absence-data";
 import { suggestEmployeeActions } from "@/ai/flows/suggest-employee-actions";
-import { ABSENCE_REQUESTS, EMPLOYEES } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles, Lightbulb } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
+import { getEmployees } from "@/lib/services/employee.service";
+import { getAbsenceRequests } from "@/lib/services/absence.service";
+import type { Employee, AbsenceRequest } from "@/lib/types";
 
 export default function InsightsPage() {
   const { toast } = useToast();
@@ -27,14 +30,26 @@ export default function InsightsPage() {
   const [teamMorale, setTeamMorale] = useState("");
   const [recentEvents, setRecentEvents] = useState("");
 
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [absenceRequests, setAbsenceRequests] = useState<AbsenceRequest[]>([]);
+  
+  useEffect(() => {
+    async function fetchData() {
+      const [emps, reqs] = await Promise.all([getEmployees(), getAbsenceRequests()]);
+      setEmployees(emps);
+      setAbsenceRequests(reqs);
+    }
+    fetchData();
+  }, []);
+
   const handleSummarize = async () => {
     setIsSummaryLoading(true);
     setSummary("");
     try {
-      const absenceRecords = ABSENCE_REQUESTS.map(req => ({
+      const absenceRecords = absenceRequests.map(req => ({
         ...req,
-        startDate: format(req.startDate, 'yyyy-MM-dd'),
-        endDate: format(req.endDate, 'yyyy-MM-dd')
+        startDate: format(new Date(req.startDate), 'yyyy-MM-dd'),
+        endDate: format(new Date(req.endDate), 'yyyy-MM-dd')
       }));
       const result = await summarizeAbsenceData({ absenceRecords });
       setSummary(result.summary);
@@ -55,7 +70,7 @@ export default function InsightsPage() {
     setIsSuggestionsLoading(true);
     setSuggestions([]);
     
-    const selectedEmployee = EMPLOYEES.find(emp => emp.name === employeeName);
+    const selectedEmployee = employees.find(emp => emp.name === employeeName);
     if (!selectedEmployee) {
         toast({ variant: "destructive", title: "Please select an employee."});
         setIsSuggestionsLoading(false);
@@ -98,7 +113,7 @@ export default function InsightsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button onClick={handleSummarize} disabled={isSummaryLoading}>
+              <Button onClick={handleSummarize} disabled={isSummaryLoading || absenceRequests.length === 0}>
                 {isSummaryLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -126,12 +141,12 @@ export default function InsightsPage() {
               <form onSubmit={handleSuggestActions} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="employee">Employee</Label>
-                  <Select onValueChange={setEmployeeName} value={employeeName}>
+                  <Select onValueChange={setEmployeeName} value={employeeName} disabled={employees.length === 0}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select an employee" />
                     </SelectTrigger>
                     <SelectContent>
-                      {EMPLOYEES.map(emp => <SelectItem key={emp.id} value={emp.name}>{emp.name}</SelectItem>)}
+                      {employees.map(emp => <SelectItem key={emp.id} value={emp.name}>{emp.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

@@ -1,3 +1,4 @@
+
 "use client";
 import {
   Card,
@@ -8,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { EMPLOYEES, ABSENCE_REQUESTS } from "@/lib/data";
 import { useRole } from "@/hooks/use-role";
 import { PageHeader } from "@/components/page-header";
 import { RoleGate } from "@/components/role-gate";
@@ -23,38 +23,47 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { getInitials } from "@/lib/utils";
-import type { Employee } from "@/lib/types";
-import { useMemo } from "react";
-
-const getStatusForEmployee = (employeeId: string) => {
-  const onLeave = ABSENCE_REQUESTS.some(
-    (req) =>
-      req.employeeId === employeeId &&
-      req.status === "Approved" &&
-      new Date() >= req.startDate &&
-      new Date() <= req.endDate
-  );
-  return onLeave ? "On Leave" : "In Office";
-};
+import type { Employee, AbsenceRequest } from "@/lib/types";
+import { useMemo, useState, useEffect } from "react";
+import { getEmployees } from "@/lib/services/employee.service";
+import { getAbsenceRequests } from "@/lib/services/absence.service";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
   const { role } = useRole();
-  const team = EMPLOYEES.slice(0, 5);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [absenceRequests, setAbsenceRequests] = useState<AbsenceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const team = employees.slice(0, 5);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const [emps, reqs] = await Promise.all([getEmployees(), getAbsenceRequests()]);
+      setEmployees(emps);
+      setAbsenceRequests(reqs);
+      setLoading(false);
+    }
+    fetchData();
+  }, [])
+
+  const getStatusForEmployee = (employeeId: string) => {
+    const onLeave = absenceRequests.some(
+      (req) =>
+        req.employeeId === employeeId &&
+        req.status === "Approved" &&
+        new Date() >= req.startDate &&
+        new Date() <= req.endDate
+    );
+    return onLeave ? "On Leave" : "In Office";
+  };
+
 
   const absenceData = useMemo(() => {
     const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
     const data: { [key: string]: { name: string; Sick: number; Vacation: number } } = {};
 
@@ -62,9 +71,9 @@ export default function Dashboard() {
       data[month] = { name: month, Sick: 0, Vacation: 0 };
     });
 
-    ABSENCE_REQUESTS.forEach((req) => {
+    absenceRequests.forEach((req) => {
       if (req.status === "Approved") {
-        const month = months[req.startDate.getMonth()];
+        const month = months[new Date(req.startDate).getMonth()];
         if (req.reason.toLowerCase().includes("sick")) {
           data[month].Sick += 1;
         } else {
@@ -74,7 +83,15 @@ export default function Dashboard() {
     });
 
     return Object.values(data);
-  }, []);
+  }, [absenceRequests]);
+
+  const onLeaveCount = useMemo(() => employees.filter(
+    (e) => getStatusForEmployee(e.id) === "On Leave"
+  ).length, [employees, absenceRequests]);
+
+  const pendingRequestsCount = useMemo(() => absenceRequests.filter(r => r.status === 'Pending').length, [absenceRequests]);
+
+  const myEmployee = useMemo(() => employees.find(e => e.email === (role === 'HR' ? 'jane.doe@talentflow.com' : 'fiona.clark@talentflow.com')), [employees, role]);
 
   return (
     <>
@@ -96,7 +113,7 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{EMPLOYEES.length}</div>
+                {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{employees.length}</div>}
               </CardContent>
             </Card>
             <Card>
@@ -106,11 +123,7 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {EMPLOYEES.filter(
-                    (e) => getStatusForEmployee(e.id) === "On Leave"
-                  ).length}
-                </div>
+                 {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{onLeaveCount}</div>}
               </CardContent>
             </Card>
              <Card>
@@ -120,9 +133,7 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {ABSENCE_REQUESTS.filter(r => r.status === 'Pending').length}
-                </div>
+                {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{pendingRequestsCount}</div>}
               </CardContent>
             </Card>
           </div>
@@ -136,7 +147,14 @@ export default function Dashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {team.map((employee: Employee) => {
+                {loading ? Array.from({length: 5}).map((_, i) => (
+                   <div key={i} className="flex flex-col items-center space-y-2">
+                      <Skeleton className="h-16 w-16 rounded-full" />
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-6 w-20" />
+                   </div>
+                )) : team.map((employee: Employee) => {
                   const status = getStatusForEmployee(employee.id);
                   return (
                     <div
@@ -178,6 +196,7 @@ export default function Dashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                {loading ? <Skeleton className="h-[300px] w-full" /> : 
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={absenceData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -189,6 +208,7 @@ export default function Dashboard() {
                     <Bar dataKey="Sick" fill="hsl(var(--accent))" />
                   </BarChart>
                 </ResponsiveContainer>
+                }
               </CardContent>
             </Card>
           </div>
@@ -199,23 +219,35 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle>My Status</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center space-x-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={EMPLOYEES[5].avatar} alt={EMPLOYEES[5].name} data-ai-hint="person profile" />
-                <AvatarFallback>{getInitials(EMPLOYEES[5].name)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold text-lg">{EMPLOYEES[5].name}</p>
-                <Badge
-                  className={
-                    getStatusForEmployee(EMPLOYEES[5].id) === "On Leave"
-                      ? "bg-amber-100 text-amber-800"
-                      : "bg-emerald-100 text-emerald-800"
-                  }
-                >
-                  {getStatusForEmployee(EMPLOYEES[5].id)}
-                </Badge>
-              </div>
+             <CardContent className="flex items-center space-x-4">
+              {loading || !myEmployee ? (
+                <>
+                  <Skeleton className="h-16 w-16 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-6 w-24" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={myEmployee.avatar} alt={myEmployee.name} data-ai-hint="person profile" />
+                    <AvatarFallback>{getInitials(myEmployee.name)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold text-lg">{myEmployee.name}</p>
+                    <Badge
+                      className={
+                        getStatusForEmployee(myEmployee.id) === "On Leave"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-emerald-100 text-emerald-800"
+                      }
+                    >
+                      {getStatusForEmployee(myEmployee.id)}
+                    </Badge>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </RoleGate>
@@ -223,3 +255,4 @@ export default function Dashboard() {
     </>
   );
 }
+

@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -12,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/page-header";
-import { EMPLOYEES } from "@/lib/data";
 import { getInitials } from "@/lib/utils";
 import { Search } from "lucide-react";
 import {
@@ -23,25 +23,40 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
+import { getEmployees } from "@/lib/services/employee.service";
+import type { Employee } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EmployeesPage() {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTeam, setFilterTeam] = useState("All Teams");
 
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setLoading(true);
+      const data = await getEmployees();
+      setEmployees(data);
+      setLoading(false);
+    };
+    fetchEmployees();
+  }, []);
+
   const teams = useMemo(
-    () => ["All Teams", ...Array.from(new Set(EMPLOYEES.map((e) => e.team)))],
-    []
+    () => ["All Teams", ...Array.from(new Set(employees.map((e) => e.team)))],
+    [employees]
   );
 
   const filteredEmployees = useMemo(() => {
-    return EMPLOYEES.filter(
+    return employees.filter(
       (employee) =>
         (employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
           employee.role.toLowerCase().includes(searchTerm.toLowerCase())) &&
         (filterTeam === "All Teams" || employee.team === filterTeam)
     );
-  }, [searchTerm, filterTeam]);
+  }, [employees, searchTerm, filterTeam]);
 
   return (
     <div className="p-4 sm:p-8">
@@ -84,7 +99,23 @@ export default function EmployeesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredEmployees.map((employee) => (
+            {loading ? (
+                Array.from({length: 5}).map((_, i) => (
+                    <TableRow key={i}>
+                        <TableCell>
+                            <div className="flex items-center gap-4">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div>
+                                    <Skeleton className="h-4 w-24 mb-1" />
+                                    <Skeleton className="h-3 w-32" />
+                                </div>
+                            </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-28" /></TableCell>
+                        <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-20" /></TableCell>
+                    </TableRow>
+                ))
+            ) : filteredEmployees.map((employee) => (
               <TableRow key={employee.id}>
                 <TableCell>
                   <div className="flex items-center gap-4">
@@ -109,7 +140,7 @@ export default function EmployeesPage() {
           </TableBody>
         </Table>
       </div>
-       {filteredEmployees.length === 0 && (
+       {filteredEmployees.length === 0 && !loading && (
           <div className="text-center p-8 text-muted-foreground">
             No employees found.
           </div>

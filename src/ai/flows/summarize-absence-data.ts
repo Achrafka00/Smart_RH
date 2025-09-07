@@ -1,3 +1,4 @@
+
 // Summarize Absence Data
 'use server';
 /**
@@ -18,6 +19,7 @@ const SummarizeAbsenceDataInputSchema = z.object({
       startDate: z.string().describe('Start date of the absence (YYYY-MM-DD).'),
       endDate: z.string().describe('End date of the absence (YYYY-MM-DD).'),
       reason: z.string(),
+      status: z.enum(['Pending', 'Approved', 'Rejected']),
     })
   ).describe('An array of absence records for employees.'),
 });
@@ -38,11 +40,14 @@ const summarizeAbsenceDataPrompt = ai.definePrompt({
   output: {schema: SummarizeAbsenceDataOutputSchema},
   prompt: `You are an AI assistant helping managers understand employee absence data.
   Given the following absence records, provide a concise summary highlighting any trends, issues, or notable patterns.
+  Focus on approved absences to identify workforce trends, but also consider pending and rejected requests if they show unusual patterns.
+  
   Absence Records:
   {{#each absenceRecords}}
-  - Employee ID: {{employeeId}}, Start Date: {{startDate}}, End Date: {{endDate}}, Reason: {{reason}}
+  - Employee ID: {{employeeId}}, Start: {{startDate}}, End: {{endDate}}, Reason: {{reason}}, Status: {{status}}
   {{/each}}
-  Summary:
+
+  Generate a summary of the data.
   `,
 });
 
