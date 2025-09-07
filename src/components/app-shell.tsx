@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -32,15 +33,22 @@ const getPageTitle = (pathname: string) => {
   }
 };
 
+const AUTH_ROUTES = ["/login", "/signup"];
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const pathname = usePathname();
+  const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  if (isAuthRoute) {
+    return <>{children}</>;
+  }
 
   if (!isMounted) {
     // To prevent hydration mismatch, we can render a skeleton or null.

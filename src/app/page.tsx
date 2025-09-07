@@ -103,113 +103,115 @@ export default function Dashboard() {
       />
       <div className="space-y-8">
         <RoleGate allowedRoles={["HR"]}>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Employees
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{employees.length}</div>}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  On Leave
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                 {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{onLeaveCount}</div>}
-              </CardContent>
-            </Card>
-             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Pending Requests
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{pendingRequestsCount}</div>}
-              </CardContent>
-            </Card>
-          </div>
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Employees
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{employees.length}</div>}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    On Leave
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{onLeaveCount}</div>}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Pending Requests
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{pendingRequestsCount}</div>}
+                </CardContent>
+              </Card>
+            </div>
 
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <Card className="col-span-1 lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Team Overview</CardTitle>
-                <CardDescription>
-                  Current status of your team members.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {loading ? Array.from({length: 5}).map((_, i) => (
-                   <div key={i} className="flex flex-col items-center space-y-2">
-                      <Skeleton className="h-16 w-16 rounded-full" />
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-4 w-16" />
-                      <Skeleton className="h-6 w-20" />
-                   </div>
-                )) : team.map((employee: Employee) => {
-                  const status = getStatusForEmployee(employee.id);
-                  return (
-                    <div
-                      key={employee.id}
-                      className="flex flex-col items-center space-y-2"
-                    >
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={employee.avatar} alt={employee.name} data-ai-hint="person portrait" />
-                        <AvatarFallback>
-                          {getInitials(employee.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="text-center">
-                        <p className="font-semibold">{employee.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {employee.role}
-                        </p>
-                      </div>
-                      <Badge
-                        variant={status === "On Leave" ? "secondary" : "default"}
-                        className={
-                          status === "On Leave"
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-emerald-100 text-emerald-800"
-                        }
-                      >
-                        {status}
-                      </Badge>
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+              <Card className="col-span-1 lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Team Overview</CardTitle>
+                  <CardDescription>
+                    Current status of your team members.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {loading ? Array.from({length: 5}).map((_, i) => (
+                    <div key={i} className="flex flex-col items-center space-y-2">
+                        <Skeleton className="h-16 w-16 rounded-full" />
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-6 w-20" />
                     </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-            <Card className="col-span-1 lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Absence Report</CardTitle>
-                <CardDescription>
-                  Monthly breakdown of approved absences.
-                </CardDescription>
-              </Header>
-              <CardContent>
-                {loading ? <Skeleton className="h-[300px] w-full" /> : 
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={absenceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="Vacation" fill="hsl(var(--primary))" />
-                    <Bar dataKey="Sick" fill="hsl(var(--accent))" />
-                  </BarChart>
-                </ResponsiveContainer>
-                }
-              </CardContent>
-            </Card>
-          </div>
+                  )) : team.map((employee: Employee) => {
+                    const status = getStatusForEmployee(employee.id);
+                    return (
+                      <div
+                        key={employee.id}
+                        className="flex flex-col items-center space-y-2"
+                      >
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={employee.avatar} alt={employee.name} data-ai-hint="person portrait" />
+                          <AvatarFallback>
+                            {getInitials(employee.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="text-center">
+                          <p className="font-semibold">{employee.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {employee.role}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={status === "On Leave" ? "secondary" : "default"}
+                          className={
+                            status === "On Leave"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-emerald-100 text-emerald-800"
+                          }
+                        >
+                          {status}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+              <Card className="col-span-1 lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Absence Report</CardTitle>
+                  <CardDescription>
+                    Monthly breakdown of approved absences.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {loading ? <Skeleton className="h-[300px] w-full" /> : 
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={absenceData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="Vacation" fill="hsl(var(--primary))" />
+                      <Bar dataKey="Sick" fill="hsl(var(--accent))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  }
+                </CardContent>
+              </Card>
+            </div>
+          </>
         </RoleGate>
 
         <RoleGate allowedRoles={["Employee"]}>
@@ -217,7 +219,7 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle>My Status</CardTitle>
             </CardHeader>
-             <CardContent className="flex items-center space-x-4">
+            <CardContent className="flex items-center space-x-4">
               {loading || !currentUser ? (
                 <>
                   <Skeleton className="h-16 w-16 rounded-full" />
