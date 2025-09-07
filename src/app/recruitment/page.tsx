@@ -7,21 +7,34 @@ import { RoleGate } from "@/components/role-gate";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Eye, Users } from "lucide-react";
-import { getJobPostings, getApplications } from "@/lib/services/recruitment.service";
+import { PlusCircle, Eye, Users, Briefcase } from "lucide-react";
+import { getJobPostings, getApplications, addJobPosting, updateJobPostingStatus } from "@/lib/services/recruitment.service";
 import type { JobPosting, Application } from "@/lib/types";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
 
-const getBadgeVariant = (status: JobPosting["status"] | Application["status"]) => {
+const getBadgeVariantForJob = (status: JobPosting["status"]) => {
   switch (status) {
     case "Open":
       return "default";
     case "Closed":
       return "secondary";
+    default:
+        return "default"
+  }
+};
+
+const getBadgeVariantForApp = (status: Application["status"]) => {
+  switch (status) {
     case "Received":
       return "secondary";
     case "Under Review":
@@ -39,17 +52,42 @@ export default function RecruitmentPage() {
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
+  const [newJob, setNewJob] = useState({ title: "", description: "" });
+
+  const fetchJobsAndApps = async () => {
       const [jobs, apps] = await Promise.all([getJobPostings(), getApplications()]);
       setJobPostings(jobs.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()));
       setApplications(apps.sort((a,b) => b.appliedAt.getTime() - a.appliedAt.getTime()));
       setLoading(false);
-    }
-    fetchData();
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    fetchJobsAndApps();
   }, []);
+
+  const handleAddJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newJob.title || !newJob.description) {
+        toast({ variant: 'destructive', title: "Missing fields", description: "Please fill out all fields."});
+        return;
+    }
+    await addJobPosting(newJob);
+    toast({ title: "Job Posting Created", description: `${newJob.title} has been posted.` });
+    setIsAddDialogOpen(false);
+    setNewJob({ title: "", description: "" });
+    fetchJobsAndApps(); // Refetch
+  };
+
+  const handleStatusToggle = async (jobId: string, currentStatus: "Open" | "Closed") => {
+    const newStatus = currentStatus === "Open" ? "Closed" : "Open";
+    await updateJobPostingStatus(jobId, newStatus);
+    toast({ title: "Job Status Updated", description: `The job is now ${newStatus.toLowerCase()}.`});
+    fetchJobsAndApps(); // Refetch
+  };
 
   const applicationsByJob = useMemo(() => {
     return jobPostings.reduce((acc, job) => {
@@ -67,9 +105,35 @@ export default function RecruitmentPage() {
             title="Recruitment"
             description="Manage job openings and candidate applications."
           />
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" /> New Job Posting
-          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> New Job Posting
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Create New Job Posting</DialogTitle>
+                    <DialogDescription>Fill out the details for the new job opening.</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAddJob} className="space-y-4">
+                    <div>
+                        <Label htmlFor="job-title">Job Title</Label>
+                        <Input id="job-title" value={newJob.title} onChange={e => setNewJob({...newJob, title: e.target.value})} />
+                    </div>
+                    <div>
+                        <Label htmlFor="job-desc">Description</Label>
+                        <Textarea id="job-desc" value={newJob.description} onChange={e => setNewJob({...newJob, description: e.target.value})} />
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="ghost">Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit">Create Posting</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-2">
@@ -97,12 +161,23 @@ export default function RecruitmentPage() {
                                 <p className="text-sm text-muted-foreground">
                                     Posted {formatDistanceToNow(job.createdAt, { addSuffix: true })}
                                 </p>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <Badge variant={getBadgeVariant(job.status)}>{job.status}</Badge>
-                                <div className="flex items-center gap-1 text-muted-foreground">
+                                 <div className="flex items-center gap-1 text-muted-foreground mt-2">
                                     <Users className="h-4 w-4" />
                                     <span className="text-sm font-bold">{applicationsByJob[job.id] || 0}</span>
+                                    <span className="text-sm">Applicants</span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                                <Badge variant={getBadgeVariantForJob(job.status)}>{job.status}</Badge>
+                                <div className="flex items-center space-x-2">
+                                    <Label htmlFor={`status-switch-${job.id}`} className="text-sm font-normal">
+                                        {job.status === "Open" ? "Close" : "Open"}
+                                    </Label>
+                                    <Switch 
+                                        id={`status-switch-${job.id}`}
+                                        checked={job.status === 'Open'}
+                                        onCheckedChange={() => handleStatusToggle(job.id, job.status)}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -117,6 +192,17 @@ export default function RecruitmentPage() {
                     <CardDescription>The latest CVs received from candidates.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                     {loading ? (
+                         <div className="flex items-center justify-center h-48 text-muted-foreground">
+                            <Skeleton className="h-16 w-16" />
+                         </div>
+                    ) : applications.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-48 text-center text-muted-foreground rounded-lg border-2 border-dashed">
+                             <Briefcase className="h-12 w-12 mb-2" />
+                            <p className="font-semibold">No Applications Yet</p>
+                            <p className="text-sm">New applications will appear here.</p>
+                        </div>
+                    ) : (
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -126,23 +212,7 @@ export default function RecruitmentPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {loading ? (
-                                Array.from({length: 4}).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <Skeleton className="h-9 w-9 rounded-full" />
-                                                <div>
-                                                    <Skeleton className="h-4 w-24 mb-1" />
-                                                    <Skeleton className="h-3 w-32" />
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
-                                        <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
-                                    </TableRow>
-                                ))
-                            ) : applications.slice(0, 5).map(app => {
+                             {applications.slice(0, 5).map(app => {
                                 const job = jobPostings.find(j => j.id === app.jobId);
                                 return (
                                     <TableRow key={app.id}>
@@ -160,7 +230,7 @@ export default function RecruitmentPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant={getBadgeVariant(app.status)}>{app.status}</Badge>
+                                            <Badge variant={getBadgeVariantForApp(app.status)}>{app.status}</Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <Button variant="ghost" size="icon">
@@ -172,10 +242,13 @@ export default function RecruitmentPage() {
                             })}
                         </TableBody>
                     </Table>
+                    )}
                 </CardContent>
-                <CardFooter>
-                    <Button variant="outline" className="w-full">View All Applications</Button>
-                </CardFooter>
+                 {applications.length > 5 && (
+                    <CardFooter>
+                        <Button variant="outline" className="w-full">View All Applications</Button>
+                    </CardFooter>
+                )}
             </Card>
         </div>
       </RoleGate>
