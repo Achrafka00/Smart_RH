@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -7,6 +8,7 @@ import {
   Calendar,
   BrainCircuit,
   BarChart3,
+  Briefcase,
 } from "lucide-react";
 import {
   SidebarMenu,
@@ -36,6 +38,7 @@ const navItems = [
     roles: ["Employee", "HR"],
   },
   { href: "/insights", icon: BrainCircuit, label: "AI Insights", roles: ["HR"] },
+  { href: "/recruitment", icon: Briefcase, label: "Recruitment", roles: ["HR"] },
   { href: "/reports", icon: BarChart3, label: "Reports", roles: ["HR"] },
 ];
 

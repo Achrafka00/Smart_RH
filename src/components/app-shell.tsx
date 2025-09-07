@@ -30,6 +30,8 @@ const getPageTitle = (pathname: string) => {
       return "AI Insights";
     case "/reports":
       return "Reporting";
+    case "/recruitment":
+      return "Recruitment";
     default:
       return "TalentFlow";
   }
@@ -86,7 +88,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <SidebarInset className="flex flex-col">
           <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-8">
             <div className="flex items-center gap-2">
-              <SidebarTrigger className="md:hidden" />
+              <SidebarTrigger />
               <div className="hidden font-semibold md:block">
                 {getPageTitle(pathname)}
               </div>

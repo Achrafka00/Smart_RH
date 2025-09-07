@@ -17,3 +17,21 @@ export type AbsenceRequest = {
   reason: string;
   status: "Pending" | "Approved" | "Rejected";
 };
+
+export type JobPosting = {
+  id: string;
+  title: string;
+  description: string;
+  status: "Open" | "Closed";
+  createdAt: Date;
+};
+
+export type Application = {
+  id: string;
+  jobId: string;
+  candidateName: string;
+  candidateEmail: string;
+  cvUrl: string;
+  status: "Received" | "Under Review" | "Rejected" | "Hired";
+  appliedAt: Date;
+};

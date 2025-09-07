@@ -1,4 +1,4 @@
-import type { Employee, AbsenceRequest } from './types';
+import type { Employee, AbsenceRequest, JobPosting, Application } from './types';
 
 export const EMPLOYEES: Employee[] = [
   { id: '1', name: 'Alice Johnson', email: 'alice@talentflow.com', avatar: 'https://picsum.photos/id/237/200/200', role: 'Frontend Developer', team: 'Web' },
@@ -22,4 +22,17 @@ export const ABSENCE_REQUESTS: AbsenceRequest[] = [
   { id: 'req6', employeeId: '1', startDate: new Date('2024-10-10'), endDate: new Date('2024-10-20'), reason: 'Extended vacation', status: 'Pending' },
   { id: 'req7', employeeId: '4', startDate: new Date('2024-08-20'), endDate: new Date('2024-08-22'), reason: 'Conference', status: 'Approved' },
   { id: 'req8', employeeId: '6', startDate: new Date(), endDate: new Date(new Date().setDate(new Date().getDate() + 2)), reason: 'Feeling unwell', status: 'Approved' },
+];
+
+export const JOB_POSTINGS: JobPosting[] = [
+    { id: 'job1', title: 'Senior Frontend Developer', description: 'Join our team to build amazing user experiences.', status: 'Open', createdAt: new Date('2024-07-15') },
+    { id: 'job2', title: 'Lead Backend Engineer', description: 'Lead our API team and build scalable services.', status: 'Open', createdAt: new Date('2024-07-10') },
+    { id: 'job3', title: 'Marketing Intern', description: 'Summer internship opportunity for marketing students.', status: 'Closed', createdAt: new Date('2024-05-20') },
+];
+
+export const APPLICATIONS: Application[] = [
+    { id: 'app1', jobId: 'job1', candidateName: 'Liam Gallagher', candidateEmail: 'liam.g@example.com', cvUrl: '#', status: 'Received', appliedAt: new Date('2024-07-20') },
+    { id: 'app2', jobId: 'job1', candidateName: 'Noel Gallagher', candidateEmail: 'noel.g@example.com', cvUrl: '#', status: 'Under Review', appliedAt: new Date('2024-07-21') },
+    { id: 'app3', jobId: 'job2', candidateName: 'Damon Albarn', candidateEmail: 'damon.a@example.com', cvUrl: '#', status: 'Received', appliedAt: new Date('2024-07-18') },
+    { id: 'app4', jobId: 'job3', candidateName: 'Graham Coxon', candidateEmail: 'graham.c@example.com', cvUrl: '#', status: 'Hired', appliedAt: new Date('2024-06-01') },
 ];
