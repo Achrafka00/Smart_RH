@@ -39,6 +39,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function fetchData() {
+      if(!currentUser) return;
       setLoading(true);
       const [emps, reqs] = await Promise.all([getEmployees(), getAbsenceRequests()]);
       setEmployees(emps);
@@ -46,7 +47,7 @@ export default function Dashboard() {
       setLoading(false);
     }
     fetchData();
-  }, [])
+  }, [currentUser])
 
   const getStatusForEmployee = (employeeId: string) => {
     const onLeave = absenceRequests.some(

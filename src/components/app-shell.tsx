@@ -15,6 +15,8 @@ import { UserNav } from "@/components/user-nav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePathname } from "next/navigation";
 import { BrainCircuit } from "lucide-react";
+import { useRole } from "@/hooks/use-role";
+
 
 const getPageTitle = (pathname: string) => {
   switch (pathname) {
@@ -38,15 +40,16 @@ const AUTH_ROUTES = ["/login", "/signup"];
 export function AppShell({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const pathname = usePathname();
+  const { isAuthenticated } = useRole();
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
-
+  
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  if (isAuthRoute) {
+  if (isAuthRoute || !isAuthenticated) {
     return <>{children}</>;
   }
 

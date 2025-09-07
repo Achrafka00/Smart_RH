@@ -17,13 +17,20 @@ import {
 import { useRole } from "@/hooks/use-role";
 import { getInitials } from "@/lib/utils";
 import type { UserRole } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 export function UserNav() {
-  const { role, setRole, currentUser } = useRole();
+  const { role, setRole, currentUser, logout, isAuthenticated } = useRole();
+  const router = useRouter();
 
-  if (!currentUser) {
+  if (!isAuthenticated || !currentUser) {
     return null;
   }
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   return (
     <DropdownMenu>
@@ -60,7 +67,7 @@ export function UserNav() {
           </DropdownMenuRadioGroup>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
