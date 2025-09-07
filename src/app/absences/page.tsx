@@ -1,6 +1,6 @@
 
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoleGate } from "@/components/role-gate";
@@ -74,7 +74,7 @@ const getBadgeVariant = (status: AbsenceRequest["status"]) => {
 };
 
 export default function AbsencesPage() {
-  const { role } = useRole();
+  const { currentUser } = useRole();
   const { toast } = useToast();
   const [requests, setRequests] = useState<AbsenceRequest[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -84,8 +84,6 @@ export default function AbsencesPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
-  
-  const myUser = useMemo(() => employees.find(e => e.email === (role === 'HR' ? 'jane.doe@talentflow.com' : 'fiona.clark@talentflow.com')), [employees, role]);
 
   useEffect(() => {
     async function fetchData() {
@@ -99,10 +97,10 @@ export default function AbsencesPage() {
   }, [])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!myUser) return;
+    if (!currentUser) return;
     
     const newRequestData = {
-      employeeId: myUser.id,
+      employeeId: currentUser.id,
       startDate: values.dateRange.from,
       endDate: values.dateRange.to,
       reason: values.reason,
@@ -148,7 +146,7 @@ export default function AbsencesPage() {
       ))
     }
     return requests
-      .filter((req) => req.employeeId === myUser?.id)
+      .filter((req) => req.employeeId === currentUser?.id)
       .map((req) => (
         <TableRow key={req.id}>
           <TableCell>{`${format(new Date(req.startDate), "MMM d")} - ${format(
@@ -355,4 +353,3 @@ export default function AbsencesPage() {
     </div>
   );
 }
-

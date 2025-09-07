@@ -30,7 +30,7 @@ import { getAbsenceRequests } from "@/lib/services/absence.service";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
-  const { role } = useRole();
+  const { role, currentUser } = useRole();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [absenceRequests, setAbsenceRequests] = useState<AbsenceRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,8 +53,8 @@ export default function Dashboard() {
       (req) =>
         req.employeeId === employeeId &&
         req.status === "Approved" &&
-        new Date() >= req.startDate &&
-        new Date() <= req.endDate
+        new Date() >= new Date(req.startDate) &&
+        new Date() <= new Date(req.endDate)
     );
     return onLeave ? "On Leave" : "In Office";
   };
@@ -91,10 +91,8 @@ export default function Dashboard() {
 
   const pendingRequestsCount = useMemo(() => absenceRequests.filter(r => r.status === 'Pending').length, [absenceRequests]);
 
-  const myEmployee = useMemo(() => employees.find(e => e.email === (role === 'HR' ? 'jane.doe@talentflow.com' : 'fiona.clark@talentflow.com')), [employees, role]);
-
   return (
-    <>
+    <div className="p-4 sm:p-8">
       <PageHeader
         title="Dashboard"
         description={
@@ -194,7 +192,7 @@ export default function Dashboard() {
                 <CardDescription>
                   Monthly breakdown of approved absences.
                 </CardDescription>
-              </CardHeader>
+              </Header>
               <CardContent>
                 {loading ? <Skeleton className="h-[300px] w-full" /> : 
                 <ResponsiveContainer width="100%" height={300}>
@@ -220,7 +218,7 @@ export default function Dashboard() {
               <CardTitle>My Status</CardTitle>
             </CardHeader>
              <CardContent className="flex items-center space-x-4">
-              {loading || !myEmployee ? (
+              {loading || !currentUser ? (
                 <>
                   <Skeleton className="h-16 w-16 rounded-full" />
                   <div className="space-y-2">
@@ -231,19 +229,19 @@ export default function Dashboard() {
               ) : (
                 <>
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src={myEmployee.avatar} alt={myEmployee.name} data-ai-hint="person profile" />
-                    <AvatarFallback>{getInitials(myEmployee.name)}</AvatarFallback>
+                    <AvatarImage src={currentUser.avatar} alt={currentUser.name} data-ai-hint="person profile" />
+                    <AvatarFallback>{getInitials(currentUser.name)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-semibold text-lg">{myEmployee.name}</p>
+                    <p className="font-semibold text-lg">{currentUser.name}</p>
                     <Badge
                       className={
-                        getStatusForEmployee(myEmployee.id) === "On Leave"
+                        getStatusForEmployee(currentUser.id) === "On Leave"
                           ? "bg-amber-100 text-amber-800"
                           : "bg-emerald-100 text-emerald-800"
                       }
                     >
-                      {getStatusForEmployee(myEmployee.id)}
+                      {getStatusForEmployee(currentUser.id)}
                     </Badge>
                   </div>
                 </>
@@ -252,7 +250,6 @@ export default function Dashboard() {
           </Card>
         </RoleGate>
       </div>
-    </>
+    </div>
   );
 }
-

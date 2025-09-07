@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,15 +19,19 @@ import { getInitials } from "@/lib/utils";
 import type { UserRole } from "@/lib/types";
 
 export function UserNav() {
-  const { role, setRole } = useRole();
+  const { role, setRole, currentUser } = useRole();
+
+  if (!currentUser) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            <AvatarImage src="https://picsum.photos/id/248/200/200" alt="@talentflow" data-ai-hint="person avatar" />
-            <AvatarFallback>{getInitials(role === 'HR' ? 'Jane Doe' : 'Fiona Clark')}</AvatarFallback>
+            <AvatarImage src={currentUser.avatar} alt={currentUser.name} data-ai-hint="person avatar" />
+            <AvatarFallback>{getInitials(currentUser.name)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -34,10 +39,10 @@ export function UserNav() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {role === 'HR' ? 'Jane Doe' : 'Fiona Clark'}
+              {currentUser.name}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {role === 'HR' ? 'jane.doe@talentflow.com' : 'fiona.clark@talentflow.com'}
+              {currentUser.email}
             </p>
           </div>
         </DropdownMenuLabel>
