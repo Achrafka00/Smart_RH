@@ -36,8 +36,8 @@ This project is built on a modern, robust, and scalable technology stack:
 - **UI Framework**: [React](https://react.dev/) for building the user interface.
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/) for a beautiful, accessible, and customizable component library.
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) for a utility-first CSS framework.
-- **Generative AI**: [Genkit](https://firebase.google.com/docs/genkit) (Google's GenAI toolkit) to integrate powerful AI features using Google's Gemini family of models.
-- **Data Layer**: Mock data services are used as a placeholder for a real database, demonstrating a clean separation of concerns and readiness for a database integration. A real implementation would use a database like Firebase Firestore.
+
+- **Data Layer**: Mock data services are used as a placeholder for a real database, demonstrating a clean separation of concerns and readiness for a database integration. A real implementation would use a database.
 
 ## Getting Started
 
@@ -90,16 +90,3 @@ Now you can open your browser to `http://localhost:9002` to see the application 
 ## From Prototype to Production: Next Steps
 
 This application currently uses an in-memory mock database for rapid prototyping. To make this a real, production-ready application, the next critical step is to integrate a persistent database.
-
-**Recommended Database: Firebase Firestore**
-
-Given the stack, **Firebase Firestore** is the ideal choice. It's a scalable, serverless NoSQL database that works seamlessly with Next.js.
-
-### Steps to Integrate Firestore:
-
-1.  **Set up a Firebase Project**: If you don't have one, create a new project in the [Firebase Console](https://console.firebase.google.com/).
-2.  **Enable Firestore**: In your Firebase project, go to the Firestore Database section and create a new database.
-3.  **Generate Firebase Config**: In your project settings, create a new Web App and copy the `firebaseConfig` object. This will be used to initialize the Firebase SDK in the application.
-4.  **Update Services**: The data service files (e.g., `src/lib/services/employee.service.ts`, `src/lib/services/absence.service.ts`) need to be refactored to use the Firestore SDK instead of the mock data arrays. This involves replacing array manipulations (`.find`, `.push`, `.filter`) with Firestore queries (`getDoc`, `addDoc`, `query`).
-
-Once you're ready, I can help with refactoring the service files to use the Firebase SDK.

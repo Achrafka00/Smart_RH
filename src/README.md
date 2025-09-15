@@ -37,7 +37,7 @@ This project is built on a modern, robust, and scalable technology stack:
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/) for a beautiful, accessible, and customizable component library.
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) for a utility-first CSS framework.
 - **Generative AI**: [Genkit](https://firebase.google.com/docs/genkit) (Google's GenAI toolkit) to integrate powerful AI features using Google's Gemini family of models.
-- **Data Layer**: Mock data services are used as a placeholder for a real database, demonstrating a clean separation of concerns and readiness for a database integration. A real implementation would use a database like Firebase Firestore.
+- **Data Layer**: Mock data services are used as a placeholder for a real database, demonstrating a clean separation of concerns and readiness for a database integration. A real implementation would use a database .
 
 ## Getting Started
 
