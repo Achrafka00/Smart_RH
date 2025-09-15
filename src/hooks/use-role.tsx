@@ -3,55 +3,70 @@
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from "react";
 import type { UserRole, Employee } from "@/lib/types";
-import { getEmployeeByRole } from "@/lib/services/employee.service";
+import { getEmployeeById } from "@/lib/services/employee.service";
 import { useRouter, usePathname } from 'next/navigation';
 
 
 type RoleContextType = {
   role: UserRole;
-  setRole: (role: UserRole) => void;
   currentUser: Employee | undefined;
   isAuthenticated: boolean;
-  login: (role: UserRole) => void;
+  login: (userId: string) => void;
   logout: () => void;
 };
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRole] = useState<UserRole>("HR");
+  const [role, setRole] = useState<UserRole>("Employee");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<Employee | undefined>();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = !!currentUserId;
   const router = useRouter();
   const pathname = usePathname();
 
+  useEffect(() => {
+    // Check local storage for a logged-in user on initial load
+    const storedUserId = localStorage.getItem('talentflow-userId');
+    if (storedUserId) {
+        setCurrentUserId(storedUserId);
+    }
+  }, []);
+  
   useEffect(() => {
     if (!isAuthenticated && pathname !== '/login' && pathname !== '/signup') {
       router.push('/login');
     }
   }, [isAuthenticated, pathname, router]);
 
-  const login = (role: UserRole) => {
-    setRole(role);
-    setIsAuthenticated(true);
+  const login = (userId: string) => {
+    setCurrentUserId(userId);
+    localStorage.setItem('talentflow-userId', userId);
   }
 
   const logout = () => {
-    setIsAuthenticated(false);
+    setCurrentUserId(null);
     setCurrentUser(undefined);
+    localStorage.removeItem('talentflow-userId');
+    router.push('/login');
   }
 
   useEffect(() => {
     async function fetchUser() {
-      if (isAuthenticated) {
-        const user = await getEmployeeByRole(role);
+      if (currentUserId) {
+        const user = await getEmployeeById(currentUserId);
         setCurrentUser(user);
+        if (user) {
+            // A simple way to determine role for this demo
+            const userRole: UserRole = user.email.includes('hr') ? 'HR' : 'Employee';
+            setRole(userRole);
+        }
       }
     }
     fetchUser();
-  }, [role, isAuthenticated]);
+  }, [currentUserId]);
 
-  const value = useMemo(() => ({ role, setRole, currentUser, isAuthenticated, login, logout }), [role, currentUser, isAuthenticated]);
+  const value = useMemo(() => ({ role, currentUser, isAuthenticated, login, logout }), [role, currentUser, isAuthenticated]);
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;
 }

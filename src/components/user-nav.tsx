@@ -9,28 +9,18 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRole } from "@/hooks/use-role";
 import { getInitials } from "@/lib/utils";
-import type { UserRole } from "@/lib/types";
-import { useRouter } from "next/navigation";
 
 export function UserNav() {
-  const { role, setRole, currentUser, logout, isAuthenticated } = useRole();
-  const router = useRouter();
+  const { currentUser, logout, isAuthenticated } = useRole();
 
   if (!isAuthenticated || !currentUser) {
     return null;
   }
-
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
-  };
 
   return (
     <DropdownMenu>
@@ -55,19 +45,15 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuLabel>Role</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            value={role}
-            onValueChange={(value) => setRole(value as UserRole)}
-          >
-            <DropdownMenuRadioItem value="HR">Manager (HR)</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="Employee">
-              Employee
-            </DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
+           <DropdownMenuItem>
+            Profile
+          </DropdownMenuItem>
+           <DropdownMenuItem>
+            Settings
+          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
+        <DropdownMenuItem onClick={logout}>
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
