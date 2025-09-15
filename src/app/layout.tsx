@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 import { RoleProvider } from "@/hooks/use-role";
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -20,10 +21,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-body antialiased`}>
-        <RoleProvider>
-          <AppShell>{children}</AppShell>
-          <Toaster />
-        </RoleProvider>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            <RoleProvider>
+            <AppShell>{children}</AppShell>
+            <Toaster />
+            </RoleProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
