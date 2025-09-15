@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { getEmployees } from '@/lib/services/employee.service';
 
 const RecognizeFaceInputSchema = z.object({
   photoDataUri: z
@@ -41,15 +42,28 @@ const recognizeFaceFlow = ai.defineFlow(
     // or a dedicated face recognition API to compare the input face
     // with a database of registered user faces.
     
-    // For now, we'll return a mock response.
-    console.log('Received face recognition request. Returning mock data.');
+    console.log('Received face recognition request. Simulating recognition...');
 
-    // Mock logic: randomly decide if the face is recognized.
-    const isRecognized = Math.random() > 0.5;
+    // Mock logic: randomly decide if the face is recognized. Then, if it is,
+    // pick a random *existing* user to "log in" as.
+    const isRecognized = Math.random() > 0.3; // Higher chance of success now
     
+    if (isRecognized) {
+        const employees = await getEmployees();
+        if (employees.length > 0) {
+            const randomUser = employees[Math.floor(Math.random() * employees.length)];
+            console.log(`Recognized user: ${randomUser.name}`);
+            return {
+                isRecognized: true,
+                userId: randomUser.id,
+            };
+        }
+    }
+    
+    console.log('Face not recognized.');
     return {
-        isRecognized: isRecognized,
-        userId: isRecognized ? '1' : undefined, // Return a mock user ID if recognized
+        isRecognized: false,
+        userId: undefined,
     };
   }
 );
